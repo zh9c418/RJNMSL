@@ -12,6 +12,13 @@ document is the model introducing the project itself:
 > researched, captured packets, read the logs and made minor fixes. Review it before
 > relying on it.
 
+> [!WARNING]
+> **Disclaimer**: This project is for learning and for interoperating with your
+> **own** network/device. Credentials are stored **in plaintext** locally
+> (ACL-restricted only) — evaluate the risk yourself, and make sure your use does
+> not violate your campus/institution's acceptable-use policy. EAP-MD5 itself is
+> not a secure protocol.
+
 **A lightweight replacement for the Ruijie campus-network supplicant on Windows.**
 
 RJNMSL authenticates a wired 802.1X port without installing a vendor kernel
