@@ -1,0 +1,14 @@
+[package]
+name = "eapmd5"
+description = "User-mode EapHost EAP-MD5 (RFC 3748 Type 4) peer method for Windows native 802.1X"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "eapmd5"
+crate-type = ["cdylib"]
+
+[dependencies]
+md-5 = "0.10"

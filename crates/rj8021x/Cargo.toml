@@ -1,0 +1,33 @@
+[package]
+name = "rj8021x"
+description = "Standalone 802.1X (EAPOL) supplicant speaking raw Ethernet over Npcap"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "rj8021x"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+pcap = "2.2"
+md-5 = "0.10"
+hex = "0.4"
+
+# --- optional EAP-PEAP / MSCHAPv2 support (`--features peap`) ---
+sha1 = { version = "0.10", optional = true }
+md4 = { version = "0.10", optional = true }
+des = { version = "0.8", optional = true }
+rand = { version = "0.8", optional = true }
+rustls = { version = "0.23", optional = true, default-features = false, features = ["ring", "std", "logging", "tls12"] }
+
+[features]
+default = []
+peap = ["sha1", "md4", "des", "rand", "rustls"]

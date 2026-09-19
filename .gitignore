@@ -1,0 +1,15 @@
+# build output
+/target
+**/*.rs.bk
+
+# secrets / local config — never commit these
+config.toml
+credentials.txt
+credentials.txt
+*.ini
+*.log
+
+# editor
+.vscode/
+.idea/
+*.swp

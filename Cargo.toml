@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = ["crates/eapmd5", "crates/rj8021x"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/USERNAME/RJNMSL"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"

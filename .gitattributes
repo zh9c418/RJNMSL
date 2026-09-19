@@ -1,0 +1,7 @@
+# Normalize line endings; keep import libraries binary.
+* text=auto eol=lf
+*.lib binary
+*.exp binary
+*.dll binary
+*.png binary
+*.ico binary

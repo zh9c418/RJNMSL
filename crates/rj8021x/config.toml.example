@@ -1,0 +1,43 @@
+# rj8021x configuration
+#
+# copy to `config.toml` (which is .gitignore'd) and edit.
+# This is the *standalone* supplicant; the recommended, driver-free solution is
+# the eapmd5 EapHost method (see ../eapmd5 and the top-level README).
+
+# Which NIC to authenticate on. Matched, in order, against:
+#   1) exact pcap device name
+#   2) adapter MAC address, e.g. "AA-BB-CC-DD-EE-FF"
+#   3) substring of the adapter description (case-insensitive)
+# Run `rj8021x --list` to see the options.
+interface = "Ethernet"
+
+# 802.1X username / account
+identity = "your-account"
+
+# 802.1X password
+password = "your-password"
+
+# EAP method: "md5" (default) or "peap".
+#   md5  -> EAP-MD5, the classic campus wired mode.
+#   peap -> EAP-PEAP/MSCHAPv2. Requires building with `--features peap`.
+method = "md5"
+
+# For PEAP you usually send an anonymous outer identity. Optional.
+# anonymous_identity = "anonymous"
+
+# EAPOL version for frames we originate (1/2/3). Responses echo the switch's.
+eapol_version = 1
+
+# Only needed if pcap cannot report the adapter MAC for the chosen interface.
+# local_mac = "AA-BB-CC-DD-EE-FF"
+
+# Seconds to wait for the authenticator before retransmitting.
+start_timeout_secs = 5
+# Max retransmits when nothing is heard back.
+max_start_attempts = 3
+# Seconds before restarting after failure/timeout.
+retry_delay_secs = 5
+# After success, how long to stay idle before proactively re-initiating.
+maintain_timeout_secs = 1800
+# Exit right after the first successful authentication.
+exit_on_success = false
