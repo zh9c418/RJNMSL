@@ -7,6 +7,8 @@ document is the model introducing the project itself:
 
 [简体中文](README.md) | English
 
+[![CI](https://github.com/zh9c418/RJNMSL/actions/workflows/ci.yml/badge.svg)](https://github.com/zh9c418/RJNMSL/actions/workflows/ci.yml)
+
 > **This is a vibecoding project.** The code is predominantly AI-generated, mainly
 > by **deepseek-v4.1-flash** and **gpt-5.6-sol**. A human supplied the requirements,
 > researched, captured packets, read the logs and made minor fixes. Review it before

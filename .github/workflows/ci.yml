@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    # Everything here is Windows-only (EapHost method + Npcap-based supplicant).
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build workspace
+        run: cargo build --workspace --release --verbose
+
+      - name: Build rj8021x with PEAP support
+        run: cargo build -p rj8021x --release --features peap --verbose
+
+      - name: Show artifacts
+        run: |
+          Get-ChildItem target/release/eapmd5.dll, target/release/rj8021x.exe |
+            Select-Object Name, Length
+
+      - name: clippy (informational)
+        run: cargo clippy --workspace --all-targets
+        continue-on-error: true
+
+      - name: rustfmt (informational)
+        run: cargo fmt --all -- --check
+        continue-on-error: true

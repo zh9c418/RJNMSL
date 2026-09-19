@@ -3,6 +3,8 @@
 
 简体中文 | [English](README.en.md)
 
+[![CI](https://github.com/zh9c418/RJNMSL/actions/workflows/ci.yml/badge.svg)](https://github.com/zh9c418/RJNMSL/actions/workflows/ci.yml)
+
 > **这是一个 vibecoding 项目。** 代码主要由 AI 生成，主力模型是
 > **deepseek-v4.1-flash** 和 **gpt-5.6-sol**。人工负责提需求、查资料、抓包、读日志和少量修补。
 > 使用前请自行审阅评估。
