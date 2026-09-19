@@ -1,9 +1,10 @@
 # RJNMSL
+我的校园网走有线的话要装一个认证客户端，我很讨厌这狗屎玩意。然后顺便测试一下现在的LLM辅助开发方式和dsv4.1的逆向/编码能力。后面的内容让DS自己开始介绍：
 
 简体中文 | [English](README.en.md)
 
-> **这是一个 vibecoding（氛围编程）项目。** 代码主要由 AI 生成，主力模型是
-> **deepseek-v4.1-flash** 和 **gpt-5.6-sol**。人工负责提需求、抓包、读日志和少量修补。
+> **这是一个 vibecoding 项目。** 代码主要由 AI 生成，主力模型是
+> **deepseek-v4.1-flash** 和 **gpt-5.6-sol**。人工负责提需求、查资料、抓包、读日志和少量修补。
 > 使用前请自行审阅评估。
 
 **一个用于替代 Windows 上锐捷校园网认证客户端的轻量方案。**
@@ -14,11 +15,12 @@ RJNMSL 可以让有线 802.1X 端口认证通过，而**不安装厂商内核驱
 
 ## 背景
 
+
 不少校园网要求安装厂商客户端（锐捷 `SuService.exe` / `8021x.exe`）来做有线 802.1X 认证。该客户端会：
 
 * 安装内核态 NDIS 抓包驱动（PCAUSA `PCASp50` / `W32N55`）并绑定到网卡，用来收发原始 EAPOL 帧；
 * 常驻一个 `LocalSystem` 服务（还会在你的会话里拉起进程、写 Winlogon 等）；
-* 加载抓包驱动——而游戏反作弊（腾讯 ACE、BattlEye、EAC、Vanguard 等）会重点关注这类驱动。
+* 加载抓包驱动——而游戏反作弊（腾讯 ACE、BattlEye、EAC、Vanguard, 还有embark studios最近出的elytra 等）会重点关注这类驱动。
 
 如果你只是想让 802.1X 端口认证通过，上面这些其实都不需要。RJNMSL 提供两种做法。
 
@@ -58,7 +60,7 @@ Windows 自带的认证组件（`Wired AutoConfig` / `dot3svc`）本来就会通
 环境：Windows 10/11、Rust（MSVC 工具链）、管理员权限。
 
 ```powershell
-git clone https://github.com/USERNAME/RJNMSL
+git clone https://github.com/zh9c418/RJNMSL
 cd RJNMSL
 cargo build --release --workspace          # 产出 target\release\eapmd5.dll
 
@@ -139,7 +141,7 @@ docs/
 
 * **EAP-MD5 本身很弱**（无服务器认证、可离线字典攻击）。RJNMSL 不会让协议变强，只是给 Windows 补上 Type-4 实现。如果你能改服务端，建议迁移到 PEAP/TEAP。
 * 凭据文件是**明文**（已限制 ACL）。本机管理员仍可读取。
-* 用 `rj8021x` 时，请**停掉厂商客户端和 Windows 自带的 `dot3svc`**，否则它们会抢同一个端口。
+* 用 `rj8021x` 时，请**停掉锐捷的客户端和 Windows 自带的 `dot3svc`**，否则它们会抢同一个端口。
 * Windows 11 24H2 有公开报告的第三方 EAP 方法回归问题，详见 [`docs/troubleshooting.md`](docs/troubleshooting.md)。
 
 ## 许可证

@@ -6,7 +6,7 @@ members = ["crates/eapmd5", "crates/rj8021x"]
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/USERNAME/RJNMSL"
+repository = "https://github.com/zh9c418/RJNMSL"
 
 [profile.release]
 lto = true

@@ -1,10 +1,16 @@
 # RJNMSL
 
+My campus network requires a supplicant for wired access, and I can't stand the
+thing. This project also doubles as a test of today's LLM-assisted development
+workflow and DSv4.1's reverse-engineering / coding ability. The rest of this
+document is the model introducing the project itself:
+
 [简体中文](README.md) | English
 
 > **This is a vibecoding project.** The code is predominantly AI-generated, mainly
 > by **deepseek-v4.1-flash** and **gpt-5.6-sol**. A human supplied the requirements,
-> captured packets, read the logs and made minor fixes. Review it before relying on it.
+> researched, captured packets, read the logs and made minor fixes. Review it before
+> relying on it.
 
 **A lightweight replacement for the Ruijie campus-network supplicant on Windows.**
 
@@ -24,7 +30,7 @@ Many Chinese campus networks hand out a proprietary client (Ruijie Supplicant,
 * runs a `LocalSystem` service that creates processes in your session, writes to
   Winlogon, etc.;
 * loads a packet-capture driver that game anti-cheats (Tencent ACE, BattlEye,
-  EAC, Vanguard…) actively watch for.
+  EAC, Vanguard, Embark Studios' recently released Elytra, …) actively watch for.
 
 If all you need is to authenticate an 802.1X port, you don't need any of that.
 RJNMSL gives you two ways to do it.
@@ -70,7 +76,7 @@ Npcap. Supports **EAP-MD5** and (behind a feature flag) **EAP-PEAP/MSCHAPv2**.
 Requirements: Windows 10/11, Rust (MSVC toolchain), Administrator.
 
 ```powershell
-git clone https://github.com/USERNAME/RJNMSL
+git clone https://github.com/zh9c418/RJNMSL
 cd RJNMSL
 cargo build --release --workspace          # produces target\release\eapmd5.dll
 
@@ -157,8 +163,8 @@ docs/
   implementation. If you control the RADIUS/NAC side, migrate to PEAP/TEAP.
 * The credential file is **plaintext** (ACL-restricted). Anyone with local admin
   can read it.
-* If you use `rj8021x`, **stop the vendor supplicant and Windows' own
-  `dot3svc`** while it runs, or they will fight over the port.
+* If you use `rj8021x`, **stop the Ruijie client and Windows' own `dot3svc`**
+  while it runs, or they will fight over the port.
 * Windows 11 24H2 has public reports of third-party EAP method regressions.
   See [`docs/troubleshooting.md`](docs/troubleshooting.md).
 
