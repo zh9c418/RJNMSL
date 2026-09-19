@@ -177,5 +177,5 @@ docs/
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE). Provided for interoperability with your own
+GPL-3.0 — see [`LICENSE`](LICENSE). Provided for interoperability with your own
 network; respect your institution's acceptable-use policy.
