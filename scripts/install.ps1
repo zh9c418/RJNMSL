@@ -5,12 +5,13 @@
     802.1X (no packet-capture driver, no vendor supplicant).
 
 .DESCRIPTION
+    * disables the vendor supplicant FIRST (avoid two supplicants fighting)
     * copies eapmd5.dll into System32 and registers it with EapHost
     * sets Wired AutoConfig (dot3svc) to Automatic
     * installs the LAN 802.1X profile and stores the credentials
     * writes the credential file the method reads
-    * optionally disables the Ruijie supplicant service
     * optionally stops Npcap
+    * reconnects and waits for authentication, then renews DHCP
 
 .PARAMETER Interface
     Adapter name/alias to authenticate on. Auto-detected when omitted.
@@ -41,6 +42,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$script:logFile = Join-Path (Split-Path -Parent $PSScriptRoot) 'install.log'
+try { Start-Transcript -Path $script:logFile -Force | Out-Null } catch {}
 $root = Split-Path -Parent $PSScriptRoot
 $dataDir = 'C:\ProgramData\RJNMSL'
 $iniPath = Join-Path $dataDir 'eapmd5.ini'
@@ -49,7 +52,6 @@ $authorId = 49374          # 0xC0DE - our EAP method author id
 $friendlyName = 'EAP-MD5 (RJNMSL)'
 
 function Info($m) { Write-Host "[+] $m" }
-function Warn($m) { Write-Host "[!] $m" -ForegroundColor Yellow }
 
 if (-not $DllPath) { $DllPath = Join-Path $root 'target\release\eapmd5.dll' }
 if (-not (Test-Path $DllPath)) {
@@ -73,12 +75,14 @@ if (-not $Username -or -not $Password) {
 if (-not $Username) { $Username = Read-Host '802.1X username' }
 if (-not $Password) { $Password = Read-Host '802.1X password' -AsSecureString | ConvertFrom-SecureString -AsPlainText }
 
-# --- interface -----------------------------------------------------------
+# --- interface (physical wired Ethernet that is up) ----------------------
 if (-not $Interface) {
     $Interface = (Get-NetAdapter |
         Where-Object {
             $_.Status -eq 'Up' -and
-            $_.InterfaceDescription -notmatch 'Virtual|TAP|VPN|Wi-?Fi|Wireless|Bluetooth|Loopback|WAN Miniport'
+            $_.MediaType -eq '802.3' -and
+            $_.PhysicalMediaType -eq '802.3' -and
+            $_.InterfaceDescription -notmatch 'Virtual|VMware|VirtualBox|TAP|VPN|Wi-?Fi|Wireless|Bluetooth|Loopback|WAN Miniport'
         } | Select-Object -First 1).Name
 }
 if (-not $Interface) { throw 'Could not auto-detect a wired adapter; pass -Interface "<name>"' }
@@ -99,22 +103,51 @@ Info "registered  : $key"
 
 # --- 2. credential file the method reads ---------------------------------
 New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+if (Test-Path $iniPath) {
+    # a previous install locked it down; re-grant write so we can update it
+    & icacls $iniPath /inheritance:r /grant:r 'Administrators:(F)' 'SYSTEM:(R)' | Out-Null
+    Remove-Item $iniPath -Force -ErrorAction SilentlyContinue
+}
 @(
     '# RJNMSL EAP-MD5 credentials (read by eapmd5.dll)',
     "username=$Username",
     "password=$Password"
 ) | Set-Content -Path $iniPath -Encoding ASCII
-# lock the file down to Administrators + SYSTEM
-& icacls $iniPath /inheritance:r /grant:r 'SYSTEM:(R)' 'Administrators:(R)' | Out-Null
-Info "credentials  : $iniPath (ACL restricted)"
+# the method runs as SYSTEM (needs read); admins can update; nobody else
+& icacls $iniPath /inheritance:r /grant:r 'SYSTEM:(R)' 'Administrators:(F)' | Out-Null
+Info "credentials  : $iniPath (ACL: SYSTEM:R, Administrators:F)"
 
-# --- 3. dot3svc = Automatic ----------------------------------------------
+# --- 3. stop the vendor supplicant FIRST ---------------------------------
+if (-not $KeepVendorSupplicant) {
+    foreach ($svc in @('RJSuService')) {
+        $s = Get-Service -Name $svc -ErrorAction SilentlyContinue
+        if ($s) {
+            Info "stopping/disabling $svc"
+            Get-Process -Name 'RuijieSupplicant', '8021x', 'suservice', 'SoftwareManager' -ErrorAction SilentlyContinue |
+                Stop-Process -Force -ErrorAction SilentlyContinue
+            Stop-Service $svc -Force -ErrorAction SilentlyContinue
+            Set-Service $svc -StartupType Disabled -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+        }
+    }
+}
+
+# --- 4. optionally stop Npcap (no longer needed) -------------------------
+if (-not $KeepNpcap) {
+    $n = Get-Service -Name 'npcap' -ErrorAction SilentlyContinue
+    if ($n) {
+        Info 'stopping Npcap'
+        Stop-Service npcap -Force -ErrorAction SilentlyContinue
+        Set-Service npcap -StartupType Manual -ErrorAction SilentlyContinue
+    }
+}
+
+# --- 5. dot3svc + profile ------------------------------------------------
 Info 'setting dot3svc to Automatic'
 Set-Service dot3svc -StartupType Automatic
 Start-Service dot3svc
 Info ("dot3svc      : " + (Get-Service dot3svc).Status)
 
-# --- 4. LAN profile + eapuserdata ----------------------------------------
 $profileXml = Join-Path $root 'crates\eapmd5\eap-md5.xml'
 if (-not (Test-Path $profileXml)) { throw "missing profile XML: $profileXml" }
 
@@ -145,33 +178,20 @@ netsh lan add profile filename="$profileXml" interface="$Interface" | Out-Null
 netsh lan set autoconfig enabled=yes interface="$Interface" | Out-Null
 netsh lan set eapuserdata filename="$credsXml" allusers=yes interface="$Interface" | Out-Null
 Remove-Item $credsXml -Force -ErrorAction SilentlyContinue
+
+# --- 6. reconnect, wait for authentication, renew DHCP -------------------
+Info 'reconnecting...'
+netsh lan reconnect interface="$Interface" | Out-Null
+Start-Sleep -Seconds 12
+netsh lan show interfaces
+ipconfig /renew "$Interface" | Out-Null
+Start-Sleep -Seconds 3
+
+Info 'status:'
+netsh lan show interfaces
 netsh lan show profiles interface="$Interface"
 
-# --- 5. optionally stop the vendor supplicant ----------------------------
-if (-not $KeepVendorSupplicant) {
-    foreach ($svc in @('RJSuService')) {
-        $s = Get-Service -Name $svc -ErrorAction SilentlyContinue
-        if ($s) {
-            Info "stopping/disabling $svc"
-            Get-Process -Name 'RuijieSupplicant', '8021x', 'suservice' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-            Stop-Service $svc -Force -ErrorAction SilentlyContinue
-            Set-Service $svc -StartupType Disabled -ErrorAction SilentlyContinue
-        }
-    }
-}
-
-# --- 6. optionally stop Npcap (no longer needed) -------------------------
-if (-not $KeepNpcap) {
-    $n = Get-Service -Name 'npcap' -ErrorAction SilentlyContinue
-    if ($n) {
-        Info 'stopping Npcap'
-        Stop-Service npcap -Force -ErrorAction SilentlyContinue
-        Set-Service npcap -StartupType Manual -ErrorAction SilentlyContinue
-    }
-}
-
-Info 'done. reconnecting...'
-netsh lan reconnect interface="$Interface" | Out-Null
 Write-Host ''
-Write-Host 'Check status with:  netsh lan show interfaces'
-Write-Host "Method log:         $dataDir\eapmd5.log"
+Write-Host 'Check connectivity with:  ping <your gateway>'
+Write-Host "Method log:               $dataDir\eapmd5.log"
+try { Stop-Transcript | Out-Null } catch {}

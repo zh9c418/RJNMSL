@@ -20,6 +20,7 @@ param(
 )
 
 $ErrorActionPreference = 'Continue'
+try { Start-Transcript -Path (Join-Path (Split-Path -Parent $PSScriptRoot) 'uninstall.log') -Force | Out-Null } catch {}
 $authorId = 49374
 $dataDir = 'C:\ProgramData\RJNMSL'
 $sysDll = 'C:\Windows\System32\eapmd5.dll'
@@ -30,7 +31,9 @@ if (-not $Interface) {
     $Interface = (Get-NetAdapter |
         Where-Object {
             $_.Status -eq 'Up' -and
-            $_.InterfaceDescription -notmatch 'Virtual|TAP|VPN|Wi-?Fi|Wireless|Bluetooth|Loopback|WAN Miniport'
+            $_.MediaType -eq '802.3' -and
+            $_.PhysicalMediaType -eq '802.3' -and
+            $_.InterfaceDescription -notmatch 'Virtual|VMware|VirtualBox|TAP|VPN|Wi-?Fi|Wireless|Bluetooth|Loopback|WAN Miniport'
         } | Select-Object -First 1).Name
 }
 
@@ -62,3 +65,4 @@ if ($RestoreNpcap) {
 }
 
 Info 'done.'
+try { Stop-Transcript | Out-Null } catch {}
