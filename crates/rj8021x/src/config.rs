@@ -1,17 +1,12 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum EapMethod {
+    #[default]
     Md5,
     Peap,
-}
-
-impl Default for EapMethod {
-    fn default() -> Self {
-        EapMethod::Md5
-    }
 }
 
 fn d_eapol_version() -> u8 {

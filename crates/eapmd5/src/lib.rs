@@ -12,7 +12,12 @@
 //! Only the MD5 math and a tiny state machine live here; everything else is
 //! EapHost glue.
 
-#![allow(non_snake_case, non_camel_case_types, clippy::missing_safety_doc)]
+#![allow(
+    non_snake_case,
+    non_camel_case_types,
+    clippy::missing_safety_doc,
+    clippy::upper_case_acronyms
+)]
 
 use std::ffi::c_void;
 use std::ptr;
@@ -184,12 +189,24 @@ type FnProcessRequest = unsafe extern "system" fn(
     *mut EapPeerMethodOutput,
     *mut *mut EapError,
 ) -> DWORD;
-type FnGetResponse =
-    unsafe extern "system" fn(EAP_SESSION_HANDLE, *mut DWORD, *mut EapPacket, *mut *mut EapError) -> DWORD;
-type FnGetResult =
-    unsafe extern "system" fn(EAP_SESSION_HANDLE, u32, *mut EapPeerMethodResult, *mut *mut EapError) -> DWORD;
-type FnGetUIContext =
-    unsafe extern "system" fn(EAP_SESSION_HANDLE, *mut DWORD, *mut *mut BYTE, *mut *mut EapError) -> DWORD;
+type FnGetResponse = unsafe extern "system" fn(
+    EAP_SESSION_HANDLE,
+    *mut DWORD,
+    *mut EapPacket,
+    *mut *mut EapError,
+) -> DWORD;
+type FnGetResult = unsafe extern "system" fn(
+    EAP_SESSION_HANDLE,
+    u32,
+    *mut EapPeerMethodResult,
+    *mut *mut EapError,
+) -> DWORD;
+type FnGetUIContext = unsafe extern "system" fn(
+    EAP_SESSION_HANDLE,
+    *mut DWORD,
+    *mut *mut BYTE,
+    *mut *mut EapError,
+) -> DWORD;
 type FnSetUIContext = unsafe extern "system" fn(
     EAP_SESSION_HANDLE,
     DWORD,
@@ -350,7 +367,6 @@ pub unsafe extern "system" fn EapPeerGetInfo(
     ERROR_SUCCESS
 }
 
-
 #[no_mangle]
 pub unsafe extern "system" fn EapPeerInitialize(pp_eap_error: *mut *mut EapError) -> DWORD {
     clear_error(pp_eap_error);
@@ -490,7 +506,6 @@ pub unsafe extern "system" fn EapPeerProcessRequestPacket(
         body.len()
     ));
 
-
     match eap_type {
         1 => {
             // EAP-Request/Identity
@@ -572,7 +587,11 @@ pub unsafe extern "system" fn EapPeerGetResult(
     }
     let r = &mut *p_result;
     log_line(&format!("GetResult reason={reason}"));
-    r.f_is_success = if reason == RESULT_REASON_SUCCESS { 1 } else { 0 };
+    r.f_is_success = if reason == RESULT_REASON_SUCCESS {
+        1
+    } else {
+        0
+    };
     r.dw_failure_reason_code = 0;
     r.f_save_connection_data = 0;
     r.dw_sizeof_connection_data = 0;

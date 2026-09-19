@@ -103,7 +103,7 @@ fn device_mac(dev: &Device) -> Option<[u8; 6]> {
     #[cfg(windows)]
     {
         let guid = extract_guid(&dev.name)?;
-        return win::mac_for_guid(&guid);
+        win::mac_for_guid(&guid)
     }
     #[cfg(not(windows))]
     {
@@ -183,9 +183,7 @@ impl Link {
             local_mac = m;
         }
         if local_mac == [0u8; 6] {
-            bail!(
-                "could not determine MAC address for {dev_name}; set `local_mac` in the config"
-            );
+            bail!("could not determine MAC address for {dev_name}; set `local_mac` in the config");
         }
 
         let mut cap = Capture::from_device(dev.name.as_str())

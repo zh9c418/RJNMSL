@@ -280,11 +280,8 @@ impl PeapSession {
                 let mschap_id = data[1];
                 let auth_challenge: [u8; 16] = data[2..18].try_into().unwrap();
 
-                let ch = mschapv2::challenge_hash(
-                    &self.peer_challenge,
-                    &auth_challenge,
-                    &self.username,
-                );
+                let ch =
+                    mschapv2::challenge_hash(&self.peer_challenge, &auth_challenge, &self.username);
                 let nt = mschapv2::challenge_response(&self.nt_hash, &ch);
 
                 let mut v = Vec::with_capacity(50);

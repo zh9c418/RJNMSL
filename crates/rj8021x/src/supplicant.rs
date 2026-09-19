@@ -1,10 +1,10 @@
 //! The 802.1X supplicant state machine.
 //!
 //! Flow:
-//!   * `authenticate()`  : send EAPOL-Start, drive the EAP exchange to a result.
-//!   * `maintain()`      : after success, answer re-auth requests until we are
-//!                         kicked (EAP-Failure) or go idle.
-//!   * `run()`           : outer loop that ties them together.
+//!   * `authenticate()`: send EAPOL-Start, drive the EAP exchange to a result.
+//!   * `maintain()`: after success, answer re-auth requests until we are kicked
+//!     (EAP-Failure) or go idle.
+//!   * `run()`: outer loop that ties them together.
 
 use std::time::{Duration, Instant};
 
@@ -254,7 +254,9 @@ fn build_response(cfg: &Config, cx: &mut Cx, pkt: &EapPacket, t: u8) -> Result<V
             }
             #[cfg(not(feature = "peap"))]
             {
-                log::warn!("server requested EAP-PEAP but this build has no `peap` feature; NAKing");
+                log::warn!(
+                    "server requested EAP-PEAP but this build has no `peap` feature; NAKing"
+                );
                 vec![EapPacket::nak(pkt.id, EAP_TYPE_MD5)]
             }
         }
